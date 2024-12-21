@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-mahasiswa
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web-mahasiswa
+  template:
+    metadata:
+      labels:
+        app: web-mahasiswa
+    spec:
+      containers:
+      - name: web-mahasiswa
+        image: villysatria/web-mahasiswa:latest
+        ports:
+        - containerPort: 80
