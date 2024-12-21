@@ -27,7 +27,7 @@ jobs:
       with:
         context: .
         push: true
-        tags: akunmkepl/web-mahasiswa:latest
+        tags: villysatria/web-mahasiswa:latest
         platforms: linux/amd64,linux/arm64
 
     - name: Post Build Cleanup
