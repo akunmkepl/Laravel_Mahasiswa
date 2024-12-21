@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   app:
-    image: akunmkepl/Web-Mahasiswa:latest
+    image: akunmkepl/web-mahasiswa:latest
     container_name: Container_Mahasiswa
     ports:
       - "8000:9000"
