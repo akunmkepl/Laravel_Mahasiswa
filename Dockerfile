@@ -2,27 +2,41 @@
 FROM php:8.0-fpm
 
 # Instal ekstensi dan dependensi yang diperlukan
-RUN apt-get update && apt-get install -y \
-    zip unzip libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libxml2-dev git \
+RUN RUN apt-get update && apt-get install -y \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    zip \
+    git \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+    && docker-php-ext-install gd pdo pdo_mysql
 
-# Instal Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Atur direktori kerja
+# Set working directory
 WORKDIR /var/www
 
-# Salin file proyek ke dalam container
-COPY . .
+# Copy composer.lock and composer.json
+COPY composer.json composer.lock ./
 
-# Atur izin untuk storage dan cache
-RUN chmod -R 775 storage bootstrap/cache
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Instal dependencies Laravel
+# Install Laravel dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Expose port untuk PHP-FPM
-EXPOSE 9000
+# Copy project files
+COPY . .
 
-CMD ["php-fpm"]
+# Tahap kedua: Nginx
+FROM nginx:alpine
+
+# Copy the Laravel public directory to Nginx's default directory
+COPY --from=build /var/www/public /usr/share/nginx/html
+
+# Copy custom Nginx configuration (optional)
+COPY nginx/default.conf /etc/nginx/conf.d/default.conf
+
+# Expose port 80
+EXPOSE 80
+
+# Start Nginx and PHP-FPM services
+CMD ["nginx", "-g", "daemon off;"]
