@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile  # Nama Dockerfile Anda
-    image: villysatria/web-mahasiswa  # Ganti dengan nama image Laravel Anda
+    image: villysatria/web-mahasiswa:latest  # Ganti dengan nama image Laravel Anda
     volumes:
       - .:/var/www
     networks:
