@@ -1,55 +1,36 @@
+version: '3.8'
+
 services:
   app:
-    image: villysatria/web-mahasiswa  # Ganti dengan nama image Laravel Anda
-    container_name: laravel-app
-    ports:
-      - "8080:80"
-    environment:
-      - DB_CONNECTION=mysql
-      - DB_HOST=db
-      - DB_PORT=3306
-      - DB_DATABASE=akademik
-      - DB_USERNAME=root
-      - DB_PASSWORD=root_password
+    build:
+      context: .
+      dockerfile: Dockerfile
     volumes:
       - .:/var/www
     networks:
-      - laravel-net
-    depends_on:
-      - db
+      - laravel_network
 
-  db:
-    image: mysql:8
-    container_name: mysql-db
-    environment:
-      MYSQL_ROOT_PASSWORD: root_password  # Password untuk root MySQL
-      MYSQL_DATABASE: akademik
-      MYSQL_USER: root
-      MYSQL_PASSWORD: 
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-    networks:
-      - laravel-net
-  
   nginx:
-    image: nginx:alpine
-    container_name: laravel_nginx
+    image: nginx:latest
     ports:
       - "80:80"
     volumes:
-      - .:/usr/share/nginx/html
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx.conf:/etc/nginx/nginx.conf
     depends_on:
       - app
     networks:
-      - app-network
+      - laravel_network
 
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+    networks:
+      - laravel_network
 
 networks:
-  laravel-net:
+  laravel_network:
     driver: bridge
-
-volumes:
-  mysql_data:
