@@ -1,28 +1,57 @@
 FROM php:8.0-fpm
 
-# Install dependencies
-RUN apt-get update && apt-get install -y \
-    libpq-dev \
+# Set Working Directory
+WORKDIR /var/www/laraveldocker
+
+# Copy Composer Files
+COPY composer.json composer.lock /var/www/laraveldocker/
+
+# Install Required Packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    mariadb-client \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    locales \
+    jpegoptim \
+    optipng \
+    pngquant \
+    gifsicle \
+    vim \
     unzip \
-    && docker-php-ext-install pdo pdo_mysql
+    git \
+    curl \
+    libzip-dev \
+    zip && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install PHP Extensions
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
+    docker-php-ext-install pdo pdo_mysql gd zip
 
 # Install Composer
-COPY --from=composer:2.6 /usr/bin/composer /usr/bin/composer
+RUN mkdir -p /usr/local/bin && chmod -R 777 /usr/local/bin && \
+    curl -sS https://getcomposer.org/installer -o composer-setup.php && \
+    php composer-setup.php --install-dir=/usr/local/bin --filename=composer && \
+    rm composer-setup.php
 
-# Set working directory
-WORKDIR /var/www
+# Add User
+RUN groupadd -g 1000 www && \
+    useradd -u 1000 -ms /bin/bash -g www www
 
-# Copy Laravel project
-COPY . .
+# Copy Project Files
+COPY . /var/www/laraveldocker
+RUN composer install --no-dev --optimize-autoloader
+RUN chmod -R 775 /var/www/laraveldocker/storage /var/www/laraveldocker/bootstrap/cache
+RUN cp .env.example .env && php artisan key:generate
+RUN php artisan config:clear && php artisan cache:clear && php artisan view:clear
+RUN chown -R www:www /var/www/laraveldocker
 
-# Install Laravel dependencies
-RUN composer install --optimize-autoloader --no-dev
+# Switch to Non-root User
+USER www
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www
-
-# Expose port
+# Expose Port and Start PHP-FPM
 EXPOSE 9000
 
-# Run PHP-FPM
 CMD ["php-fpm"]
