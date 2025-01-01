@@ -12,11 +12,16 @@ services:
     environment:
       SERVICE_NAME: app
     working_dir: /var/www/laraveldocker
+    
     volumes:
       - .:/var/www/laraveldocker
       - ./storage/php.ini:/usr/local/etc/php/conf.d/local.ini
     networks:
       - laraveldocker
+    command: >
+      sh -c "php artisan key:generate &&
+             php artisan config:clear &&
+             php-fpm"
 
   webserver:
     image: nginx:alpine
@@ -27,7 +32,7 @@ services:
       - "80:80"
     volumes:
       - .:/var/www/laraveldocker
-      - ./nginx/:/etc/nginx/conf.d/
+      - ./storage/:/etc/nginx/conf.d/
     networks:
       - laraveldocker
 
@@ -42,11 +47,11 @@ services:
       - "lbdata:/var/lib/mysql"
     environment:
       MYSQL_ROOT_PASSWORD: laraveldocker
-      MYSQL_PASSWORD: laraveldocker
+      MYSQL_PASSWORD: ""
       SERVICE_TAGS: dev
       SERVICE_NAME: mysql
-      MYSQL_DATABASE: laravel
-      MYSQL_USER: laravel
+      MYSQL_DATABASE: akademik
+      MYSQL_USER: root
     networks:
       - laraveldocker
 
@@ -57,7 +62,7 @@ services:
       PMA_HOST: db
     restart: always
     ports:
-      - "7000:80"
+      - "8080:80"
     networks:
       - laraveldocker
 
